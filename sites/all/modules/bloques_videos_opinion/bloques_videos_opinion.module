@@ -1,0 +1,235 @@
+<?php
+
+/**
+ * Implements hook_ctools_plugin_type() to inform CTools about the layout plugin.
+ */
+function bloques_videos_opinion_ctools_plugin_type() {
+    $plugins['layouts'] = array(
+      'load themes' => TRUE,
+    );
+
+    return $plugins;
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function bloques_videos_opinion_ctools_plugin_directory($module, $plugin) {
+    // Telling the system where your plugins live
+    if ($module == 'ctools' && !empty($plugin)) {
+        return "plugins/$plugin";
+    }
+}
+
+/**
+ * Implements hook_theme
+ */
+function bloques_videos_opinion_theme() {
+    return array(
+        'bloques_videos_opinion_home12c' => array(
+            'variables' => array(
+                'nodes' => NULL,
+                'title' => NULL,
+                'url'	=> NULL,
+            ),
+            'template' => 'bloques_videos_opinion_home12c',
+        ),
+        'bloques_videos_opinion_home3c' => array(
+            'variables' => array(
+                'nodes' => NULL,
+                'title' => NULL,
+                'url'	=> NULL,
+                'limit'	=> NULL,
+            ),
+            'template' => 'bloques_videos_opinion_home3c',
+        ),
+        'bloques_videos_opinion_section12c' => array(
+            'variables' => array(
+                'nodes' => NULL,
+                'title' => NULL,
+                'url'	=> NULL,
+            ),
+            'template' => 'bloques_videos_opinion_home12c',
+        ),
+        'bloques_videos_opinion_section3c' => array(
+            'variables' => array(
+                'nodes' => NULL,
+                'title' => NULL,
+                'url'	=> NULL,
+                'limit'	=> NULL,
+            ),
+            'template' => 'bloques_videos_opinion_home3c',
+        ),
+     );
+}
+
+/**
+ * Implements hook_template_preprocess_theme
+ */
+function template_preprocess_bloques_videos_opinion_home12c(&$variables) {
+	$file_path  = get_cache_file_directory();
+	$file_path .= 'recientes.json';
+  //print " template_preprocess_bloques_videos_opinion_home12c " . $file_path . "<br/>";
+	bloques_videos_opinion_set_data($variables, $file_path, 4);
+}
+
+/**
+ * Implements hook_template_preprocess_theme
+ */
+function template_preprocess_bloques_videos_opinion_home3c(&$variables) {
+	$file_path  = get_cache_file_directory();
+	$file_path .= 'destacados.json';
+  //print " template_preprocess_bloques_videos_opinion_home3c file_path: " . $file_path;
+  print " template_preprocess_bloques_videos_opinion_home3c: " . $file_path . "<br/>";
+	bloques_videos_opinion_set_data($variables, $file_path, $variables['limit']);
+}
+
+/**
+ * Implements hook_template_preprocess_theme
+ */
+function template_preprocess_bloques_videos_opinion_section12c(&$variables) {
+    bloques_videos_opinion_set_videos_section($variables, 4);
+}
+
+/**
+ * Implements hook_template_preprocess_theme
+ */
+function template_preprocess_bloques_videos_opinion_section3c(&$variables) {
+    //print " template_preprocess_bloques_videos_opinion_section3c <br/>";
+    //print_r($variables)
+
+    //print " limit: ".$variables['limit'];
+    bloques_videos_opinion_set_videos_section($variables, $variables['limit']);
+}
+
+function bloques_videos_opinion_set_data(&$variables, $file, $limit) {
+
+  //print " variables: " . print_r($variables) . " <br/> ";
+  //print " file: " . $file . " <br/> ";
+  //print " limit: " . $limit . " <br/> ";
+
+	if (file_exists($file)) {
+    print " existe file ";
+		$content = file_get_contents($file);
+		$videos = json_decode($content, TRUE);
+		if (is_array($videos)) {
+			$variables['nodes'] = array_slice($videos, 0, $limit);
+		}
+	}else{
+    print " No existe file ";
+    $term = menu_get_object('taxonomy_term', 2);
+    //https://www.eluniversalvideo.com.mx/api/t?type=recientes&section=opinion
+    if (is_object($term) && isset($term->name)) {
+        $url = 'https://www.eluniversalvideo.com.mx/api/t?';
+        $fields = array(
+            'type' => 'recientes',
+            'section' => 'opinion',
+        );
+        $url .= http_build_query($fields);
+
+        $time = time() + (60*60); // 1 hora
+        $cache_name = transliteration_get($term->name);
+        //$cache_name = $term->name;
+        $cache_name = str_replace(' ','_', $cache_name);
+        $cache_name = 'bloques_videos_' . strtolower(transliteration_get($term->name, '?', language_default('language')));
+
+    }
+    $nodes = bloques_videos_opinion_get_cache($cache_name, 'bloques_videos_opinion_curl', array($url), $time, 'cache');
+    if (!empty($nodes)) {
+        $nodes = json_decode($nodes, TRUE);
+        $nodes = array_slice($nodes, 0, $limit);
+        $variables['nodes'] = $nodes;
+        //if(empty($variables['title']))
+        //$variables['title'] = $term->name;
+        //if(empty($variables['url']))
+        //$variables['url']   = '/' . drupal_get_path_alias('taxonomy/term/' . $term->tid);
+    }
+
+  }
+
+
+}
+
+function get_cache_file_directory() {
+
+	$cache_directory = 'cache/video';
+  //print " DRUPAL_ROOT: " . DRUPAL_ROOT . "<br/>";
+  //print " variable_get('file_public_path', conf_path() . '/files'): " . variable_get('file_public_path', conf_path() . '/files') . "<br/>";
+  //print " cache_directory: " . $cache_directory . "<br/>";
+	return DRUPAL_ROOT . '/' . variable_get('file_public_path', conf_path() . '/files') . '/' . $cache_directory . '/';
+}
+
+function bloques_videos_opinion_get_cache($cache_name, $function_callback, $function_parameters, $time, $cache_type = 'cache') {
+    $data = array();
+    $cache = cache_get($cache_name);
+    if($cache && $cache->expire > time()){
+        return $cache->data;
+    }
+    else{
+        if (function_exists($function_callback)) {
+            $data = call_user_func_array($function_callback, $function_parameters);
+            if ($data) {
+                cache_set($cache_name, $data, $cache_type, $time);
+            }
+        }
+    }
+    return $data;
+}
+
+function bloques_videos_opinion_curl($url) {
+    if (!function_exists('curl_init')) {
+        die('Sorry cURL is not installed!');
+    }
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+    $output = curl_exec($ch);
+    $http_code  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($http_code == 200 && !empty($output)) {
+        return trim($output);
+    }
+    else {
+        return false;
+    }
+}
+
+function bloques_videos_opinion_set_videos_section(&$variables, $limit) {
+    $term = menu_get_object('taxonomy_term', 2);
+    //https://www.eluniversalvideo.com.mx/api/t?type=recientes&section=opinion
+    if (is_object($term) && isset($term->name)) {
+        $url = 'https://www.eluniversalvideo.com.mx/api/t?';
+        $fields = array(
+            'type' => 'recientes',
+            'section' => 'opinion',
+        );
+        $url .= http_build_query($fields);
+
+        //print "term->name: " . $term->name . "<br/>";
+        //print "url: " . $url . "<br/>";
+        //print_r($term);
+
+        $time = time() + (60*60); // 1 hora
+        $cache_name = transliteration_get($term->name);
+        //$cache_name = $term->name;
+        $cache_name = str_replace(' ','_', $cache_name);
+        $cache_name = 'bloques_videos_' . strtolower(transliteration_get($term->name, '?', language_default('language')));
+        //$cache_name = 'bloques_videos_' . strtolower($term->name);
+        //print " cache_name: " . $cache_name . "<br/>";
+
+        $nodes = bloques_videos_opinion_get_cache($cache_name, 'bloques_videos_opinion_curl', array($url), $time, 'cache');
+        if (!empty($nodes)) {
+            $nodes = json_decode($nodes, TRUE);
+            $nodes = array_slice($nodes, 0, $limit);
+            $variables['nodes'] = $nodes;
+            if (empty($variables['title']))
+                $variables['title'] = $term->name;
+            if (empty($variables['url']))
+                $variables['url']   = '/' . drupal_get_path_alias('taxonomy/term/' . $term->tid);
+        }
+    }
+}

@@ -1,0 +1,10 @@
+name = "Bloques Videos Opinión"
+description = "Bloques de videos El Universal Version 5 para la sección de Opinión"
+package = "ElUniversalV5"
+core = "7.x"
+version = "7.x-1.0"
+
+files[] = bloques_videos_opinion.module
+
+dependencies[] = ctools
+dependencies[] = transliteration

@@ -1,0 +1,6 @@
+[15-May-2018 16:21:03 America/Chicago] PHP Warning:  mysqli::mysqli(): (HY000/2005): Unknown MySQL server host 'DB_HOST' (0) in /home2/kowalick/retail-inventory.blackexperiment.com/classes/Login.php on line 55
+[15-May-2018 16:21:03 America/Chicago] PHP Warning:  mysqli::set_charset(): Couldn't fetch mysqli in /home2/kowalick/retail-inventory.blackexperiment.com/classes/Login.php on line 58
+[15-May-2018 16:21:03 America/Chicago] PHP Warning:  Login::dologinWithPostData(): Couldn't fetch mysqli in /home2/kowalick/retail-inventory.blackexperiment.com/classes/Login.php on line 59
+[15-May-2018 16:25:20 America/Chicago] PHP Warning:  mysqli::mysqli(): (HY000/2005): Unknown MySQL server host 'DB_HOST' (0) in /home2/kowalick/retail-inventory.blackexperiment.com/classes/Login.php on line 55
+[15-May-2018 16:25:20 America/Chicago] PHP Warning:  mysqli::set_charset(): Couldn't fetch mysqli in /home2/kowalick/retail-inventory.blackexperiment.com/classes/Login.php on line 58
+[15-May-2018 16:25:20 America/Chicago] PHP Warning:  Login::dologinWithPostData(): Couldn't fetch mysqli in /home2/kowalick/retail-inventory.blackexperiment.com/classes/Login.php on line 59

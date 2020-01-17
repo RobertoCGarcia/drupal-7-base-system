@@ -1,0 +1,9 @@
+
+16 Diciembre de 2019
+Links de Desarrollo
+https://www.ibm.com/developerworks/library/os-new-drupal-theme/
+http://www.7sabores.com/glosario
+https://github.com/acquia/lightning-project/blob/master/README.md#get-started
+http://www.7sabores.com/blog/hacer-un-borrado-masivo-nodos-drupal-7-drush
+https://www.lolaflora.com.mx/de-vuelta-al-hogar-lola215
+https://friendlymachine.net/
